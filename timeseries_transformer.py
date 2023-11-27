@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 from positional_encoder import PositionalEncoder
 
@@ -6,7 +7,7 @@ from positional_encoder import PositionalEncoder
 class TimeSeriesTransformer(nn.Module):
 
     def __init__(self,
-                 input_size,
+                 n_input_feats,
                  d_model,
                  n_heads,
                  n_predicted_feats,
@@ -23,7 +24,7 @@ class TimeSeriesTransformer(nn.Module):
         self.d_model = d_model
 
         # Encoding pipeline
-        self.encoder_input_layer       = nn.Linear(input_size, d_model)
+        self.encoder_input_layer       = nn.Linear(n_input_feats, d_model)
         self.positional_encoding_layer = PositionalEncoder(d_model, dropout_pos_enc)
 
         encoder_layer = nn.TransformerEncoderLayer(
@@ -59,8 +60,11 @@ class TimeSeriesTransformer(nn.Module):
 
         # Encoding application
         src = self.encoder_input_layer(src)
+        print("SRC SHAPE AFTER LAYER 1: ", src.shape)
         src = self.positional_encoding_layer(src)
+        print("SRC SHAPE AFTER LAYER 2: ", src.shape)
         src = self.encoder(src)
+        print("SRC SHAPE AFTER FINAL LAYER: ", src.shape)
 
         return src
 
@@ -68,6 +72,9 @@ class TimeSeriesTransformer(nn.Module):
 
         # Decoding application
         tgt = self.decoder_input_layer(tgt)
+        print("TGT SHAPE AFTER DEC INPUT: ", tgt.shape)
+        tgt = tgt.unsqueeze(1).repeat(1, len(tgt), 1)
+        print("SRC SHAPE BEFORE DEC: ", src.shape)
         tgt = self.decoder(tgt=tgt,
                            memory=src,
                            tgt_mask=tgt_mask,
@@ -80,7 +87,8 @@ class TimeSeriesTransformer(nn.Module):
     def forward(self, src, tgt, src_mask=None, tgt_mask=None):
         
         src = self.encode(src)
-        tgt = self.decode(tgt, src, tgt_mask, src_mask)
+        print("TGT SHAPE BEFORE MODEL: ", tgt.shape)
+        tgt = self.decode(tgt.unsqueeze(-1), src, tgt_mask, src_mask)
 
         return tgt
     
