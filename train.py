@@ -1,23 +1,10 @@
 from Dataset.data import train_data_tensor
 from torch.utils.data import DataLoader
 from timeseries_transformer import TimeSeriesTransformer
+from hyperparameters import *
 import torch.nn as nn
 import torch.optim as optim
 import torch
-
-# Hyperparameters
-batch_size        = 50
-n_input_feats     = 4
-d_model           = 512
-n_heads           = 8
-n_predicted_feats = 1
-n_layers_enc      = 6
-n_layers_dec      = 6
-d_feedforward_enc = 2048
-d_feedforward_dec = 2048
-dropout_pos_enc   = 0.1
-dropout_enc       = 0.1
-dropout_dec       = 0.1
 
 model = TimeSeriesTransformer(
     n_input_feats=n_input_feats,
@@ -59,22 +46,25 @@ for epoch in range(epochs):
 
     for i, (src, tgt) in enumerate(train_loader):
 
-        # Move to device
+        # Move to device and permute the src to be in form: [batch_size, sequence_length, n_features]
         src = src.to(torch.float32).to(device)
+        src = src.permute(1, 0, 2)
         tgt = tgt.to(torch.float32).to(device)
 
         # Generate masks
-        src_mask = nn.Transformer.generate_square_subsequent_mask(sz=len(src))
-        tgt_mask = nn.Transformer.generate_square_subsequent_mask(sz=len(tgt))
+        # src_mask = nn.Transformer.generate_square_subsequent_mask(sz=len(src))
+        # tgt_mask = nn.Transformer.generate_square_subsequent_mask(sz=1)
 
         # Reset gradients
         optimizer.zero_grad()
 
         # Generate targets to run loss on
-        tst_output = model(src, tgt, src_mask, tgt_mask)
+        # tst_output = model(src, tgt, src_mask, tgt_mask)
+        tst_output = model(src, tgt)
 
         # Calculate loss, backpropagate, and add to running loss
-        loss = criterion(tst_output, tgt)
+        # Loss is calculated specifically on discharge, not on the other features
+        loss = criterion(tst_output[-1], tgt[-1])
         loss.backward()
         training_loss += loss.item()
 

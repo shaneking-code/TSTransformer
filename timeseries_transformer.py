@@ -60,11 +60,8 @@ class TimeSeriesTransformer(nn.Module):
 
         # Encoding application
         src = self.encoder_input_layer(src)
-        print("SRC SHAPE AFTER LAYER 1: ", src.shape)
         src = self.positional_encoding_layer(src)
-        print("SRC SHAPE AFTER LAYER 2: ", src.shape)
         src = self.encoder(src)
-        print("SRC SHAPE AFTER FINAL LAYER: ", src.shape)
 
         return src
 
@@ -72,9 +69,7 @@ class TimeSeriesTransformer(nn.Module):
 
         # Decoding application
         tgt = self.decoder_input_layer(tgt)
-        print("TGT SHAPE AFTER DEC INPUT: ", tgt.shape)
-        tgt = tgt.unsqueeze(1).repeat(1, len(tgt), 1)
-        print("SRC SHAPE BEFORE DEC: ", src.shape)
+        tgt = tgt.unsqueeze(0)
         tgt = self.decoder(tgt=tgt,
                            memory=src,
                            tgt_mask=tgt_mask,
@@ -87,8 +82,7 @@ class TimeSeriesTransformer(nn.Module):
     def forward(self, src, tgt, src_mask=None, tgt_mask=None):
         
         src = self.encode(src)
-        print("TGT SHAPE BEFORE MODEL: ", tgt.shape)
-        tgt = self.decode(tgt.unsqueeze(-1), src, tgt_mask, src_mask)
+        tgt = self.decode(tgt, src, tgt_mask, src_mask)
 
         return tgt
     
