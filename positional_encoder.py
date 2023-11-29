@@ -6,7 +6,8 @@ import math
 # From https://pytorch.org/tutorials/beginner/transformer_tutorial.html
 
 class PositionalEncoder(nn.Module):
-    def __init__(self, d_model,
+    def __init__(self,
+                 d_model,
                  dropout=0.1,
                  max_seq_len=5000):
         

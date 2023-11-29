@@ -40,8 +40,9 @@ class TimeSeriesTransformer(nn.Module):
         )
 
         # Decoding pipeline
+        """
         self.decoder_input_layer = nn.Linear(n_predicted_feats, d_model)
-
+        
         decoder_layer = nn.TransformerDecoderLayer(
             d_model=d_model,
             nhead=n_heads,
@@ -53,7 +54,7 @@ class TimeSeriesTransformer(nn.Module):
             decoder_layer=decoder_layer,
             num_layers=n_layers_dec
         )
-
+        """
         self.linear_mapping = nn.Linear(d_model, n_predicted_feats)
 
     def encode(self, src):
@@ -65,25 +66,27 @@ class TimeSeriesTransformer(nn.Module):
 
         return src
 
-    def decode(self, tgt, src, tgt_mask, src_mask):
+    def decode(self, tgt):# src, tgt_mask, src_mask):
 
         # Decoding application
+        """
         tgt = self.decoder_input_layer(tgt)
         tgt = tgt.unsqueeze(0)
         tgt = self.decoder(tgt=tgt,
                            memory=src,
                            tgt_mask=tgt_mask,
                            memory_mask=src_mask)
-        
+        """
         tgt = self.linear_mapping(tgt)
 
         return tgt
 
-    def forward(self, src, tgt, src_mask=None, tgt_mask=None):
+    def forward(self, src):#, tgt, src_mask=None, tgt_mask=None):
         
         src = self.encode(src)
-        tgt = self.decode(tgt, src, tgt_mask, src_mask)
+        #tgt = self.decode(tgt, src, tgt_mask, src_mask)
+        src = self.decode(src[:,-1,:])
 
-        return tgt
+        return src
     
 

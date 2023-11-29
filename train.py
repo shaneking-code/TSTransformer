@@ -31,7 +31,7 @@ optimizer = optim.Adam(model.parameters(), lr=1e-3)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Number of epochs
-epochs = 10
+epochs = 5
 
 for epoch in range(epochs):
 
@@ -48,23 +48,24 @@ for epoch in range(epochs):
 
         # Move to device and permute the src to be in form: [batch_size, sequence_length, n_features]
         src = src.to(torch.float32).to(device)
-        src = src.permute(1, 0, 2)
+        #src = src.permute(1, 0, 2)
         tgt = tgt.to(torch.float32).to(device)
 
-        # Generate masks
-        # src_mask = nn.Transformer.generate_square_subsequent_mask(sz=len(src))
-        # tgt_mask = nn.Transformer.generate_square_subsequent_mask(sz=1)
+        # Generate masks if masking = True
+        if masking:
+
+            src_mask = nn.Transformer.generate_square_subsequent_mask(sz=len(src))
+            tgt_mask = nn.Transformer.generate_square_subsequent_mask(sz=1)
 
         # Reset gradients
         optimizer.zero_grad()
 
         # Generate targets to run loss on
-        # tst_output = model(src, tgt, src_mask, tgt_mask)
-        tst_output = model(src, tgt)
+        tst_output = model(src) if (not masking) else model(src, tgt, src_mask, tgt_mask) 
 
         # Calculate loss, backpropagate, and add to running loss
         # Loss is calculated specifically on discharge, not on the other features
-        loss = criterion(tst_output[-1], tgt[-1])
+        loss = criterion(tst_output, tgt)
         loss.backward()
         training_loss += loss.item()
 
@@ -74,4 +75,4 @@ for epoch in range(epochs):
     print(f"Epoch: {epoch + 1} Loss: {training_loss / len(train_loader.dataset)}")
 
 # Save the model weights
-torch.save(model.state_dict(), "model_weights.pth")
+torch.save(model, "model.pth")
