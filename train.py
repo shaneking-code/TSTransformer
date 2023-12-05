@@ -51,17 +51,11 @@ for epoch in range(epochs):
         #src = src.permute(1, 0, 2)
         tgt = tgt.to(torch.float32).to(device)
 
-        # Generate masks if masking = True
-        if masking:
-
-            src_mask = nn.Transformer.generate_square_subsequent_mask(sz=len(src))
-            tgt_mask = nn.Transformer.generate_square_subsequent_mask(sz=1)
-
         # Reset gradients
         optimizer.zero_grad()
 
         # Generate targets to run loss on
-        tst_output = model(src) if (not masking) else model(src, tgt, src_mask, tgt_mask) 
+        tst_output = model(src)
 
         # Calculate loss, backpropagate, and add to running loss
         # Loss is calculated specifically on discharge, not on the other features

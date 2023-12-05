@@ -4,7 +4,7 @@ import torch
 from torch.utils.data import TensorDataset
 from sklearn.preprocessing import StandardScaler
 
-filepath = '~/Desktop/TST/Dataset/MissouriUpstream.nc'
+filepath = './Dataset/MissouriUpstream.nc'
 
 with xr.open_dataset(filepath, group='Reach_Timeseries') as ds:
 
