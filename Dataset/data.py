@@ -14,42 +14,52 @@ with xr.open_dataset(filepath, group='Reach_Timeseries') as ds:
     surface_slop      = np.array(ds.S)
     discharge         = np.array(ds.Q)
 
-# data = np.stack((width, average_area, surface_elevation, surface_slop, discharge), axis=1)
 data = np.stack(discharge, axis=1)[0]
 
-# Get only the first observation of each set of observations
-# data = np.array([datum[:,0] for datum in data])
+# Split into train and test (70/30 split)
 
-# Split into train and test
 train_data, test_data = data[:-179].reshape(-1,1), data[-179:].reshape(-1,1)
 
 # Preprocess using a scaler if scaling = True
-scaling = True
-if scaling:
-    scaler = StandardScaler()
-    train_data = scaler.fit_transform(train_data).flatten().tolist()
-    test_data = scaler.fit_transform(test_data).flatten().tolist()
+
+scaler = StandardScaler()
+train_data = scaler.fit_transform(train_data).flatten().tolist()
+test_data = scaler.fit_transform(test_data).flatten().tolist()
 
 # Method to split into sequences
+
+"""
+    CODE CITATION:
+        Title: SRC/TGT Sequence Split
+        Author: Jeff Heaton
+        Link: https://github.com/jeffheaton/app_deep_learning/blob/884ba74e722fd63931f0a5e283bc9e2ad25d116d//t81_558_class_10_3_transformer_timeseries.ipynb
+"""
+
 def split_data(sequence_length, dataset, n_input_feats):
 
-    X = []
-    y = []
+    src = []
+    tgt = []
 
     for i in range(len(dataset) - sequence_length):
 
-        X.append(dataset[i:(i+sequence_length)])
-        y.append(dataset[i+sequence_length])
+        src.append(dataset[i:(i+sequence_length)])
+        tgt.append(dataset[i+sequence_length])
 
-    X = np.array(X)
-    y = np.array(y)
+    src = np.array(src)
+    tgt = np.array(tgt)
 
-    return torch.tensor(X, dtype=torch.float64).view(-1, sequence_length, n_input_feats), torch.tensor(y, dtype=torch.float64).view(-1, n_input_feats)
+    return torch.tensor(src, dtype=torch.float32).view(-1, sequence_length, n_input_feats), torch.tensor(tgt, dtype=torch.float32).view(-1, n_input_feats)
+
+"""
+    END CITED CODE
+"""
 
 # Splitting data
-X_train_data, y_train_data = split_data(30, train_data, 1)
-X_test_data, y_test_data   = split_data(30, test_data, 1)
+
+src_train_data, tgt_train_data = split_data(30, train_data, 1)
+src_test_data, tgt_test_data   = split_data(30, test_data, 1)
 
 # To tensor datasets
-train_data_tensor = TensorDataset(X_train_data, y_train_data)
-test_data_tensor  = TensorDataset(X_test_data, y_test_data)
+
+train_data_tensor = TensorDataset(src_train_data, tgt_train_data)
+test_data_tensor  = TensorDataset(src_test_data, tgt_test_data)

@@ -2,8 +2,11 @@ import torch
 import torch.nn as nn
 import math
 
-# Following the official Pytorch tutorial
-# From https://pytorch.org/tutorials/beginner/transformer_tutorial.html
+
+"""
+    CITED CODE
+    Link: https://pytorch.org/tutorials/beginner/transformer_tutorial.html
+"""
 
 class PositionalEncoder(nn.Module):
     def __init__(self,
@@ -26,3 +29,7 @@ class PositionalEncoder(nn.Module):
     def forward(self, x):
 
         return self.dropout(x + self.pe[:x.size(0)])
+    
+"""
+    END CITED CODE
+"""

@@ -5,19 +5,18 @@ from hyperparameters import *
 import torch.nn as nn
 import torch.optim as optim
 import torch
+import matplotlib.pyplot as plt
 
+# Instantiate model with hyperparameters
 model = TimeSeriesTransformer(
     n_input_feats=n_input_feats,
     d_model=d_model,
     n_heads=n_heads,
     n_predicted_feats=n_predicted_feats,
     n_layers_enc=n_layers_enc,
-    n_layers_dec=n_layers_dec,
     d_feedforward_enc=d_feedforward_enc,
-    d_feedforward_dec=d_feedforward_dec,
     dropout_pos_enc=dropout_pos_enc,
     dropout_enc=dropout_enc,
-    dropout_dec=dropout_dec
 )
 
 # Load training data into DataLoader
@@ -32,6 +31,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Number of epochs
 epochs = 5
+
+plot_losses = False
+if plot_losses:
+    losses = []
 
 for epoch in range(epochs):
 
@@ -62,11 +65,19 @@ for epoch in range(epochs):
         loss = criterion(tst_output, tgt)
         loss.backward()
         training_loss += loss.item()
-
         # Step forward
         optimizer.step()
 
+    if plot_losses:
+        losses.append(training_loss / len(train_loader.dataset))
+
     print(f"Epoch: {epoch + 1} Loss: {training_loss / len(train_loader.dataset)}")
+
+if plot_losses:
+    plt.plot(range(1, len(losses) + 1), losses, color="b")
+    plt.xlabel("Epoch")
+    plt.ylabel("MSELoss")
+    plt.savefig("loss_epochs.png", dpi=300)
 
 # Save the model weights
 torch.save(model, "model.pth")
